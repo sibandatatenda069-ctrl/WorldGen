@@ -48,7 +48,7 @@
             <button class="text-button" id="copySeed"><span class="copy-icon">⧉</span> COPY</button>
           </div>
           <div class="seed-input-wrap">
-            <input id="seedInput" inputmode="numeric" value="28479153" aria-label="World seed" />
+            <input id="seedInput" inputmode="numeric" value="102787" aria-label="World seed" />
             <button id="randomSeed" class="random-button" aria-label="Create random seed" title="Random seed">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
             </button>
@@ -90,7 +90,7 @@
         <section class="control-section layers-section">
           <label class="section-title">WORLD LAYERS</label>
           <div class="toggle-grid">
-            <label class="toggle-row"><span><i class="layer-icon grid-icon"></i>Chunk grid</span><input type="checkbox" id="gridToggle" checked><b></b></label>
+            <label class="toggle-row"><span><i class="layer-icon grid-icon"></i>Chunk grid</span><input type="checkbox" id="gridToggle"><b></b></label>
             <label class="toggle-row"><span><i class="layer-icon contour-icon"></i>Contours</span><input type="checkbox" id="contourToggle"><b></b></label>
             <label class="toggle-row"><span><i class="layer-icon object-icon"></i>World objects</span><input type="checkbox" id="objectsToggle" checked><b></b></label>
           </div>
@@ -118,7 +118,7 @@
           <span>GENERATE WORLD</span>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
         </button>
-        <div class="key-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> TO EXPLORE <i></i> <span><kbd>SCROLL</kbd></span> TO ZOOM</div>
+        <div class="key-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> MOVE <i></i> <span><kbd>DRAG</kbd></span> ORBIT <i></i> <span><kbd>SCROLL</kbd></span> ZOOM</div>
       </aside>
 
       <section class="world-stage" aria-label="Generated world map">
@@ -129,7 +129,7 @@
             <span class="live-badge"><i></i> LIVE WORLD</span>
             <div>
               <strong id="worldName">THE VERDANT REACH</strong>
-              <span id="worldSeedLabel">SEED 28479153</span>
+              <span id="worldSeedLabel">SEED 102787</span>
             </div>
           </div>
           <div class="stage-actions">
@@ -213,6 +213,6 @@
   </dialog>
 
   <div class="toast" id="toast" role="status">Seed copied to clipboard</div>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

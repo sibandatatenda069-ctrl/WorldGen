@@ -1,16 +1,25 @@
 # WorldGen
 
-An interactive, deterministic procedural terrain explorer built with the Canvas 2D API and no runtime dependencies.
+A deterministic, stylized 3D procedural terrain explorer powered by Three.js. The renderer and its dependencies are vendored, so the application runs locally without an install or build step.
 
 ## Features
 
 - Reproducible numeric world seeds
-- Five-octave fractal noise terrain
-- Infinite 16 × 16 tile chunk coordinates
-- Climate-driven biome and deterministic object placement
-- Three levels of distance-based terrain detail
-- Keyboard, drag, and scroll exploration
+- Five-octave fractal terrain and climate noise
+- Infinite 16 × 16 terrain chunks streamed around the player
+- Three real geometry LOD levels with seam-covering terrain skirts
+- Climate-driven biomes and instanced low-poly trees, rocks, and cacti
+- Animated water, atmospheric fog, clouds, lighting, and soft shadows
+- Orbit camera plus keyboard exploration
 - 64 × 64 terrain mesh export in OBJ and binary glTF (`.glb`) formats
+
+## Controls
+
+- **WASD / arrow keys** — move through the world
+- **Shift** — move faster
+- **Drag** — orbit the 3D camera
+- **Mouse wheel** — zoom
+- **Chunk grid, contours, and objects** — toggle viewport layers
 
 ## Terrain export
 
