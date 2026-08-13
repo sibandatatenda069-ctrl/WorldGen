@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0c100f" />
+  <meta name="description" content="WorldGen — an interactive seeded procedural terrain explorer." />
+  <title>WorldGen — Procedural Terrain Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="WorldGen home">
+        <span class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span>WORLD<span>GEN</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="#generator" class="active">Generator</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#guide">Guide</a>
+      </nav>
+      <div class="header-actions">
+        <span class="engine-status"><i></i> ENGINE ONLINE</span>
+        <button class="icon-button" id="helpButton" aria-label="Open quick guide" title="Quick guide">?</button>
+      </div>
+    </header>
+
+    <main class="workspace" id="generator">
+      <aside class="control-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">GENERATION INPUT</span>
+            <h1>Shape your world.</h1>
+          </div>
+          <button class="collapse-button" id="collapsePanel" aria-label="Collapse settings panel">‹</button>
+        </div>
+        <p class="intro">Every coordinate is generated from one reproducible seed. Tune the system, then explore forever.</p>
+
+        <section class="control-section seed-section">
+          <div class="section-label-row">
+            <label for="seedInput">WORLD SEED</label>
+            <button class="text-button" id="copySeed"><span class="copy-icon">⧉</span> COPY</button>
+          </div>
+          <div class="seed-input-wrap">
+            <input id="seedInput" inputmode="numeric" value="28479153" aria-label="World seed" />
+            <button id="randomSeed" class="random-button" aria-label="Create random seed" title="Random seed">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            </button>
+          </div>
+          <p class="field-help">Same seed. Same world. Every time.</p>
+        </section>
+
+        <section class="control-section">
+          <div class="section-label-row">
+            <label>TERRAIN PROFILE</label>
+            <span class="profile-name" id="profileName">BALANCED</span>
+          </div>
+          <div class="preset-row" role="group" aria-label="Terrain profile presets">
+            <button data-preset="islands">Islands</button>
+            <button data-preset="balanced" class="selected">Balanced</button>
+            <button data-preset="highlands">Highlands</button>
+          </div>
+        </section>
+
+        <section class="control-section sliders-section">
+          <div class="slider-control">
+            <div class="control-label"><label for="scaleSlider">Terrain scale</label><output id="scaleValue">64%</output></div>
+            <input type="range" id="scaleSlider" min="32" max="100" value="64" />
+          </div>
+          <div class="slider-control">
+            <div class="control-label"><label for="elevationSlider">Elevation</label><output id="elevationValue">1.00×</output></div>
+            <input type="range" id="elevationSlider" min="60" max="150" value="100" />
+          </div>
+          <div class="slider-control">
+            <div class="control-label"><label for="seaSlider">Sea level</label><output id="seaValue">42%</output></div>
+            <input type="range" id="seaSlider" min="25" max="65" value="42" />
+          </div>
+          <div class="slider-control">
+            <div class="control-label"><label for="biomeSlider">Biome diversity</label><output id="biomeValue">72%</output></div>
+            <input type="range" id="biomeSlider" min="20" max="100" value="72" />
+          </div>
+        </section>
+
+        <section class="control-section layers-section">
+          <label class="section-title">WORLD LAYERS</label>
+          <div class="toggle-grid">
+            <label class="toggle-row"><span><i class="layer-icon grid-icon"></i>Chunk grid</span><input type="checkbox" id="gridToggle" checked><b></b></label>
+            <label class="toggle-row"><span><i class="layer-icon contour-icon"></i>Contours</span><input type="checkbox" id="contourToggle"><b></b></label>
+            <label class="toggle-row"><span><i class="layer-icon object-icon"></i>World objects</span><input type="checkbox" id="objectsToggle" checked><b></b></label>
+          </div>
+        </section>
+
+        <button class="generate-button" id="generateButton">
+          <span>GENERATE WORLD</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+        </button>
+        <div class="key-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> TO EXPLORE <i></i> <span><kbd>SCROLL</kbd></span> TO ZOOM</div>
+      </aside>
+
+      <section class="world-stage" aria-label="Generated world map">
+        <canvas id="worldCanvas"></canvas>
+        <div class="canvas-noise"></div>
+        <div class="stage-topbar">
+          <div class="world-identity">
+            <span class="live-badge"><i></i> LIVE WORLD</span>
+            <div>
+              <strong id="worldName">THE VERDANT REACH</strong>
+              <span id="worldSeedLabel">SEED 28479153</span>
+            </div>
+          </div>
+          <div class="stage-actions">
+            <button id="centerButton" title="Return to origin" aria-label="Return to world origin">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            </button>
+            <button id="fullscreenButton" title="Toggle fullscreen" aria-label="Toggle map fullscreen">
+              <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="chunk-status"><span id="chunkCount">49</span> CHUNKS LOADED <i></i> <span id="lodCount">24</span> AT LOW LOD</div>
+
+        <aside class="map-inspector">
+          <div class="inspector-header"><span>ACTIVE CHUNK</span><b id="chunkId">+00 / +00</b></div>
+          <div class="inspector-biome">
+            <span class="biome-swatch" id="biomeSwatch"></span>
+            <div><small>LOCAL BIOME</small><strong id="biomeName">TEMPERATE FOREST</strong></div>
+          </div>
+          <div class="inspector-stats">
+            <div><small>ELEVATION</small><strong id="elevationStat">482 m</strong></div>
+            <div><small>DETAIL</small><strong id="lodStat">LOD 0</strong></div>
+            <div><small>OBJECTS</small><strong id="objectStat">18</strong></div>
+          </div>
+          <div class="elevation-scale">
+            <span>ALTITUDE</span>
+            <div><i></i><i></i><i></i><i></i><i></i></div>
+            <p><span>0 m</span><span>2,400 m</span></p>
+          </div>
+        </aside>
+
+        <div class="coordinates"><span>WORLD POSITION</span><strong id="coordinates">X +0000&nbsp;&nbsp; Z +0000</strong></div>
+
+        <div class="player-marker" aria-label="Player position">
+          <span class="marker-pulse"></span>
+          <svg viewBox="0 0 30 36" aria-hidden="true"><path d="M15 3L26 30l-11-5-11 5L15 3z"/></svg>
+          <em>YOU</em>
+        </div>
+
+        <div class="zoom-control">
+          <button id="zoomIn" aria-label="Zoom in">+</button>
+          <span id="zoomLabel">100%</span>
+          <button id="zoomOut" aria-label="Zoom out">−</button>
+        </div>
+
+        <div class="biome-legend" aria-label="Biome color legend">
+          <span><i class="water"></i>WATER</span>
+          <span><i class="sand"></i>SHORE</span>
+          <span><i class="grass"></i>PLAINS</span>
+          <span><i class="forest"></i>FOREST</span>
+          <span><i class="rock"></i>ALPINE</span>
+        </div>
+      </section>
+    </main>
+
+    <section class="pipeline" id="pipeline">
+      <div class="pipeline-title"><span>LIVE GENERATION PIPELINE</span><i></i></div>
+      <div class="pipeline-steps">
+        <article><b>01</b><span class="pipeline-icon seed-pipeline">#</span><div><strong>Seed</strong><small>Deterministic source</small></div><em>LOCKED</em></article>
+        <article><b>02</b><span class="pipeline-icon noise-pipeline">≋</span><div><strong>Noise</strong><small>5 octave FBM</small></div><em>ACTIVE</em></article>
+        <article><b>03</b><span class="pipeline-icon chunk-pipeline">▦</span><div><strong>Chunks</strong><small>16 × 16 tiles</small></div><em>STREAMING</em></article>
+        <article><b>04</b><span class="pipeline-icon biome-pipeline">♧</span><div><strong>Biomes</strong><small>Climate mapped</small></div><em>ACTIVE</em></article>
+        <article><b>05</b><span class="pipeline-icon lod-pipeline">◫</span><div><strong>LOD</strong><small>3 detail levels</small></div><em>OPTIMIZED</em></article>
+      </div>
+    </section>
+  </div>
+
+  <dialog id="guideDialog">
+    <button class="dialog-close" id="closeGuide" aria-label="Close guide">×</button>
+    <span class="eyebrow">QUICK GUIDE</span>
+    <h2>How this world is made</h2>
+    <div class="guide-list" id="guide">
+      <article><b>01</b><div><strong>One seed, one world</strong><p>The seed initializes every random decision. Share it to reproduce this exact terrain.</p></div></article>
+      <article><b>02</b><div><strong>Layered noise</strong><p>Five octaves of smooth value noise form the elevation, moisture, and temperature maps.</p></div></article>
+      <article><b>03</b><div><strong>Infinite chunks</strong><p>The map streams 16 × 16 tile chunks around you as you move with W, A, S, and D.</p></div></article>
+      <article><b>04</b><div><strong>Climate-driven biomes</strong><p>Altitude, temperature, and moisture decide where forests, deserts, snow, and objects appear.</p></div></article>
+      <article><b>05</b><div><strong>Adaptive detail</strong><p>Distant terrain is sampled at lower resolution to keep exploration smooth.</p></div></article>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status">Seed copied to clipboard</div>
+  <script src="app.js"></script>
+</body>
+</html>
