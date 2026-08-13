@@ -27,7 +27,11 @@ Choose **OBJ** or **GLB** in the Terrain Export control, move to the area you wa
 
 ## Run locally
 
-Serve the repository with any static web server:
+### Open directly
+
+Extract the ZIP, then double-click `index.html`. The Three.js renderer is bundled into `app.bundle.js`, so the application works from a local `file://` URL without installing anything.
+
+### Optional local server
 
 ```bash
 python3 -m http.server 4173
