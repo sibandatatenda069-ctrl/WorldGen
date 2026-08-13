@@ -125,6 +125,19 @@ input[type="range"]::-moz-range-thumb { width: 8px; height: 8px; border: 2px sol
 .grid-icon { background: linear-gradient(90deg, transparent 43%, currentColor 43% 56%, transparent 56%), linear-gradient(0deg, transparent 43%, currentColor 43% 56%, transparent 56%); border: 1px solid currentColor; }
 .contour-icon { border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; border-radius: 50%; transform: skewY(-12deg); }
 .object-icon { border-radius: 50% 50% 45% 45%; background: currentColor; clip-path: polygon(50% 0,100% 70%,65% 70%,65% 100%,35% 100%,35% 70%,0 70%); }
+.export-section { padding-top: 15px; }
+.export-size { color: #68726b; font: 500 7px var(--mono); letter-spacing: .08em; }
+.export-controls { display: grid; grid-template-columns: 82px 1fr; height: 38px; gap: 7px; margin-top: 10px; }
+.format-switch { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-strong); border-radius: 3px; overflow: hidden; }
+.format-switch button { padding: 0; border: 0; border-right: 1px solid var(--line); color: #667068; background: #0c100e; cursor: pointer; font: 500 8px var(--mono); letter-spacing: .05em; transition: .18s; }
+.format-switch button:last-child { border-right: 0; }
+.format-switch button:hover { color: var(--text); }
+.format-switch button.selected { color: #10150e; background: var(--accent); }
+.export-button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 10px; border: 1px solid rgba(185,237,99,.42); border-radius: 3px; color: var(--accent); background: rgba(185,237,99,.07); cursor: pointer; font: 500 8px var(--mono); letter-spacing: .08em; transition: .18s; }
+.export-button:hover { border-color: var(--accent); background: rgba(185,237,99,.13); }
+.export-button:disabled { cursor: wait; color: #687268; border-color: var(--line); background: transparent; }
+.export-button svg { width: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.export-section .field-help { margin-top: 7px; }
 .generate-button { width: 100%; height: 45px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border: 1px solid var(--accent); border-radius: 3px; background: var(--accent); color: #11150f; cursor: pointer; font: 600 9px var(--mono); letter-spacing: .11em; transition: .2s; }
 .generate-button:hover { background: #caff70; box-shadow: 0 0 24px rgba(185,237,99,.12); }
 .generate-button:active { transform: translateY(1px); }

@@ -96,6 +96,24 @@
           </div>
         </section>
 
+        <section class="control-section export-section">
+          <div class="section-label-row">
+            <label>TERRAIN EXPORT</label>
+            <span class="export-size">64 × 64 TILES</span>
+          </div>
+          <div class="export-controls">
+            <div class="format-switch" role="group" aria-label="Export file format">
+              <button class="selected" data-export-format="obj" aria-pressed="true">OBJ</button>
+              <button data-export-format="glb" aria-pressed="false">GLB</button>
+            </div>
+            <button class="export-button" id="exportButton" title="Export the terrain around your current position">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 17v4h16v-4"/></svg>
+              <span>EXPORT MESH</span>
+            </button>
+          </div>
+          <p class="field-help">Exports the 64 × 64 region centered on the player.</p>
+        </section>
+
         <button class="generate-button" id="generateButton">
           <span>GENERATE WORLD</span>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
@@ -190,6 +208,7 @@
       <article><b>03</b><div><strong>Infinite chunks</strong><p>The map streams 16 × 16 tile chunks around you as you move with W, A, S, and D.</p></div></article>
       <article><b>04</b><div><strong>Climate-driven biomes</strong><p>Altitude, temperature, and moisture decide where forests, deserts, snow, and objects appear.</p></div></article>
       <article><b>05</b><div><strong>Adaptive detail</strong><p>Distant terrain is sampled at lower resolution to keep exploration smooth.</p></div></article>
+      <article><b>06</b><div><strong>Mesh export</strong><p>Export the 64 × 64 tile region around the player as a colored OBJ or binary glTF mesh.</p></div></article>
     </div>
   </dialog>
 

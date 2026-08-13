@@ -31,6 +31,7 @@
     grid: document.getElementById("gridToggle"),
     contours: document.getElementById("contourToggle"),
     objects: document.getElementById("objectsToggle"),
+    exportButton: document.getElementById("exportButton"),
     toast: document.getElementById("toast"),
     playerArrow: document.querySelector(".player-marker svg")
   };
@@ -59,6 +60,7 @@
     sea: .42,
     diversity: .72,
     profile: "balanced",
+    exportFormat: "obj",
     camera: { x: 0, y: 0 },
     zoom: 1,
     width: 0,
@@ -426,6 +428,250 @@
     return count;
   }
 
+  function buildExportMesh() {
+    const tileCount = 64;
+    const rowSize = tileCount + 1;
+    const vertexCount = rowSize * rowSize;
+    const startX = Math.floor(state.camera.x) - tileCount / 2;
+    const startY = Math.floor(state.camera.y) - tileCount / 2;
+    const heightScale = 24;
+    const positions = new Float32Array(vertexCount * 3);
+    const normals = new Float32Array(vertexCount * 3);
+    const colors = new Uint8Array(vertexCount * 4);
+    const indices = new Uint16Array(tileCount * tileCount * 6);
+    let minimumHeight = Infinity;
+    let maximumHeight = -Infinity;
+
+    for (let z = 0; z <= tileCount; z += 1) {
+      for (let x = 0; x <= tileCount; x += 1) {
+        const vertex = z * rowSize + x;
+        const worldX = startX + x;
+        const worldY = startY + z;
+        const sample = terrainAt(worldX, worldY);
+        const modelHeight = sample.height * heightScale;
+        const positionOffset = vertex * 3;
+        const colorOffset = vertex * 4;
+
+        positions[positionOffset] = x - tileCount / 2;
+        positions[positionOffset + 1] = modelHeight;
+        positions[positionOffset + 2] = z - tileCount / 2;
+        minimumHeight = Math.min(minimumHeight, modelHeight);
+        maximumHeight = Math.max(maximumHeight, modelHeight);
+
+        const slopeX = (heightAt(worldX + 1, worldY) - heightAt(worldX - 1, worldY)) * heightScale;
+        const slopeZ = (heightAt(worldX, worldY + 1) - heightAt(worldX, worldY - 1)) * heightScale;
+        const normalLength = Math.hypot(slopeX, 2, slopeZ) || 1;
+        normals[positionOffset] = -slopeX / normalLength;
+        normals[positionOffset + 1] = 2 / normalLength;
+        normals[positionOffset + 2] = -slopeZ / normalLength;
+
+        colors[colorOffset] = sample.biome.color[0];
+        colors[colorOffset + 1] = sample.biome.color[1];
+        colors[colorOffset + 2] = sample.biome.color[2];
+        colors[colorOffset + 3] = 255;
+      }
+    }
+
+    let indexOffset = 0;
+    for (let z = 0; z < tileCount; z += 1) {
+      for (let x = 0; x < tileCount; x += 1) {
+        const a = z * rowSize + x;
+        const b = a + 1;
+        const c = a + rowSize;
+        const d = c + 1;
+        // Counter-clockwise winding for a Y-up coordinate system.
+        indices[indexOffset++] = a;
+        indices[indexOffset++] = c;
+        indices[indexOffset++] = b;
+        indices[indexOffset++] = b;
+        indices[indexOffset++] = c;
+        indices[indexOffset++] = d;
+      }
+    }
+
+    return {
+      tileCount,
+      rowSize,
+      vertexCount,
+      startX,
+      startY,
+      minimumHeight,
+      maximumHeight,
+      positions,
+      normals,
+      colors,
+      indices
+    };
+  }
+
+  function meshToOBJ(mesh) {
+    const lines = [
+      "# WorldGen procedural terrain export",
+      `# Seed: ${state.seed}`,
+      `# World origin: X ${mesh.startX}, Z ${mesh.startY}`,
+      `# Size: ${mesh.tileCount} x ${mesh.tileCount} tiles`,
+      `o WorldGen_${state.seed}`
+    ];
+
+    for (let vertex = 0; vertex < mesh.vertexCount; vertex += 1) {
+      const positionOffset = vertex * 3;
+      const colorOffset = vertex * 4;
+      const red = (mesh.colors[colorOffset] / 255).toFixed(4);
+      const green = (mesh.colors[colorOffset + 1] / 255).toFixed(4);
+      const blue = (mesh.colors[colorOffset + 2] / 255).toFixed(4);
+      lines.push(
+        `v ${mesh.positions[positionOffset].toFixed(5)} ${mesh.positions[positionOffset + 1].toFixed(5)} ${mesh.positions[positionOffset + 2].toFixed(5)} ${red} ${green} ${blue}`
+      );
+    }
+    for (let vertex = 0; vertex < mesh.vertexCount; vertex += 1) {
+      const offset = vertex * 3;
+      lines.push(`vn ${mesh.normals[offset].toFixed(6)} ${mesh.normals[offset + 1].toFixed(6)} ${mesh.normals[offset + 2].toFixed(6)}`);
+    }
+    lines.push("s 1");
+    for (let face = 0; face < mesh.indices.length; face += 3) {
+      const a = mesh.indices[face] + 1;
+      const b = mesh.indices[face + 1] + 1;
+      const c = mesh.indices[face + 2] + 1;
+      lines.push(`f ${a}//${a} ${b}//${b} ${c}//${c}`);
+    }
+    return new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  }
+
+  function meshToGLB(mesh) {
+    const positionBytes = new Uint8Array(mesh.positions.buffer, mesh.positions.byteOffset, mesh.positions.byteLength);
+    const normalBytes = new Uint8Array(mesh.normals.buffer, mesh.normals.byteOffset, mesh.normals.byteLength);
+    const colorBytes = new Uint8Array(mesh.colors.buffer, mesh.colors.byteOffset, mesh.colors.byteLength);
+    const indexBytes = new Uint8Array(mesh.indices.buffer, mesh.indices.byteOffset, mesh.indices.byteLength);
+    const positionOffset = 0;
+    const normalOffset = positionOffset + positionBytes.byteLength;
+    const colorOffset = normalOffset + normalBytes.byteLength;
+    const indexOffset = colorOffset + colorBytes.byteLength;
+    const binaryLength = indexOffset + indexBytes.byteLength;
+    const binary = new Uint8Array(binaryLength);
+    binary.set(positionBytes, positionOffset);
+    binary.set(normalBytes, normalOffset);
+    binary.set(colorBytes, colorOffset);
+    binary.set(indexBytes, indexOffset);
+
+    const half = mesh.tileCount / 2;
+    const gltf = {
+      asset: { version: "2.0", generator: "WorldGen Procedural Terrain Lab" },
+      scene: 0,
+      scenes: [{ nodes: [0] }],
+      nodes: [{ mesh: 0, name: `WorldGen Terrain ${state.seed}` }],
+      meshes: [{
+        name: "Procedural terrain",
+        primitives: [{
+          attributes: { POSITION: 0, NORMAL: 1, COLOR_0: 2 },
+          indices: 3,
+          material: 0,
+          mode: 4
+        }]
+      }],
+      materials: [{
+        name: "Biome vertex colors",
+        pbrMetallicRoughness: {
+          baseColorFactor: [1, 1, 1, 1],
+          metallicFactor: 0,
+          roughnessFactor: 1
+        },
+        doubleSided: true
+      }],
+      buffers: [{ byteLength: binaryLength }],
+      bufferViews: [
+        { buffer: 0, byteOffset: positionOffset, byteLength: positionBytes.byteLength, target: 34962 },
+        { buffer: 0, byteOffset: normalOffset, byteLength: normalBytes.byteLength, target: 34962 },
+        { buffer: 0, byteOffset: colorOffset, byteLength: colorBytes.byteLength, target: 34962 },
+        { buffer: 0, byteOffset: indexOffset, byteLength: indexBytes.byteLength, target: 34963 }
+      ],
+      accessors: [
+        {
+          bufferView: 0,
+          componentType: 5126,
+          count: mesh.vertexCount,
+          type: "VEC3",
+          min: [-half, mesh.minimumHeight, -half],
+          max: [half, mesh.maximumHeight, half]
+        },
+        { bufferView: 1, componentType: 5126, count: mesh.vertexCount, type: "VEC3" },
+        { bufferView: 2, componentType: 5121, normalized: true, count: mesh.vertexCount, type: "VEC4" },
+        {
+          bufferView: 3,
+          componentType: 5123,
+          count: mesh.indices.length,
+          type: "SCALAR",
+          min: [0],
+          max: [mesh.vertexCount - 1]
+        }
+      ],
+      extras: {
+        seed: state.seed,
+        worldOrigin: [mesh.startX, mesh.startY],
+        tileCount: mesh.tileCount,
+        chunkSize: CHUNK_SIZE,
+        seaLevel: state.sea
+      }
+    };
+
+    const encoder = new TextEncoder();
+    const jsonBytes = encoder.encode(JSON.stringify(gltf));
+    const paddedJSONLength = Math.ceil(jsonBytes.byteLength / 4) * 4;
+    const paddedBinaryLength = Math.ceil(binary.byteLength / 4) * 4;
+    const totalLength = 12 + 8 + paddedJSONLength + 8 + paddedBinaryLength;
+    const glb = new ArrayBuffer(totalLength);
+    const view = new DataView(glb);
+    const bytes = new Uint8Array(glb);
+
+    view.setUint32(0, 0x46546c67, true);
+    view.setUint32(4, 2, true);
+    view.setUint32(8, totalLength, true);
+    view.setUint32(12, paddedJSONLength, true);
+    view.setUint32(16, 0x4e4f534a, true);
+    bytes.fill(0x20, 20, 20 + paddedJSONLength);
+    bytes.set(jsonBytes, 20);
+    const binaryHeader = 20 + paddedJSONLength;
+    view.setUint32(binaryHeader, paddedBinaryLength, true);
+    view.setUint32(binaryHeader + 4, 0x004e4942, true);
+    bytes.set(binary, binaryHeader + 8);
+
+    return new Blob([glb], { type: "model/gltf-binary" });
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function exportCurrentRegion() {
+    const buttonLabel = elements.exportButton.querySelector("span");
+    elements.exportButton.disabled = true;
+    buttonLabel.textContent = "BUILDING MESH…";
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    try {
+      const mesh = buildExportMesh();
+      const format = state.exportFormat;
+      const blob = format === "glb" ? meshToGLB(mesh) : meshToOBJ(mesh);
+      const x = Math.round(state.camera.x).toString().replace("-", "n");
+      const z = Math.round(state.camera.y).toString().replace("-", "n");
+      const filename = `worldgen-${state.seed}-x${x}-z${z}.${format}`;
+      downloadBlob(blob, filename);
+      showToast(`${format.toUpperCase()} terrain mesh downloaded`);
+    } catch (error) {
+      console.error("Terrain export failed", error);
+      showToast("Terrain export failed");
+    } finally {
+      elements.exportButton.disabled = false;
+      buttonLabel.textContent = "EXPORT MESH";
+    }
+  }
+
   function updateInspector() {
     const chunkX = Math.floor(state.camera.x / CHUNK_SIZE);
     const chunkY = Math.floor(state.camera.y / CHUNK_SIZE);
@@ -595,6 +841,17 @@
   });
   [elements.grid, elements.contours, elements.objects].forEach((toggle) => toggle.addEventListener("change", () => { state.dirty = true; }));
   document.querySelectorAll("[data-preset]").forEach((button) => button.addEventListener("click", () => applyPreset(button.dataset.preset)));
+  document.querySelectorAll("[data-export-format]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.exportFormat = button.dataset.exportFormat;
+      document.querySelectorAll("[data-export-format]").forEach((option) => {
+        const selected = option === button;
+        option.classList.toggle("selected", selected);
+        option.setAttribute("aria-pressed", String(selected));
+      });
+    });
+  });
+  elements.exportButton.addEventListener("click", exportCurrentRegion);
 
   document.getElementById("zoomIn").addEventListener("click", () => setZoom(state.zoom + .15));
   document.getElementById("zoomOut").addEventListener("click", () => setZoom(state.zoom - .15));
